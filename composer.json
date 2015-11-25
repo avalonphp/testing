@@ -1,0 +1,24 @@
+{
+    "name": "avalon/testing",
+    "description": "Avalon Testing Component.",
+    "keywords": ["avalon", "framework", "testing"],
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Jack"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Avalon\\Testing\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+           "dev-master": "2.0.x-dev"
+        }
+    }
+}
