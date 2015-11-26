@@ -26,10 +26,20 @@ use Avalon\Http\Request;
  */
 class MockRequest extends Request
 {
-    public function __construct($path = '/', $method = 'GET')
+    public function __construct($path = '/', array $requestInfo = [])
     {
-        $_SERVER['REQUEST_METHOD'] = $method;
+        $requestInfo = $requestInfo + [
+            'method' => "GET",
+            'post'   => [],
+            'get'    => []
+        ];
+
+        $_SERVER['HTTP_HOST']      = "localhost";
+        $_SERVER['REQUEST_METHOD'] = $requestInfo['method'];
         $_SERVER['REQUEST_URI']    = $path;
+
+        $_POST = $requestInfo['post'];
+        $_GET  = $requestInfo['get'];
 
         parent::__construct();
     }

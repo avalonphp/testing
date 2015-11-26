@@ -19,11 +19,17 @@
 
 namespace Avalon\Testing\Http;
 
+use Avalon\Routing\Router;
+use Avalon\Http\RedirectResponse;
+
 /**
  * Test a response for stuff.
  */
 class Response
 {
+    /**
+     * @var \Avalon\Http\Response
+     */
     protected $response;
 
     public function __construct($response)
@@ -31,8 +37,48 @@ class Response
         $this->response = $response;
     }
 
+    /**
+     * Check if the response body contains the specified string.
+     *
+     * @var string
+     *
+     * @return boolean
+     */
     public function contains($contains)
     {
         return strpos($this->response->body, $contains) !== false;
+    }
+
+    /**
+     * Check if the response redirection URL matches the URL of the specified route.
+     *
+     * @var string
+     *
+     * @return boolean
+     */
+    public function shouldRedirectTo($routeName)
+    {
+        $url = Router::generateUrl($routeName, false);
+        return ($this->response instanceof RedirectResponse && $this->response->url == $url);
+    }
+
+    /**
+     * Converts response to string.
+     *
+     * @return string
+     */
+    public function toString()
+    {
+        return $this->__toString();
+    }
+
+    /**
+     * Converts response to string.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->response->body;
     }
 }
