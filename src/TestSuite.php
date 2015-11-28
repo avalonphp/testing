@@ -198,7 +198,6 @@ class TestSuite
         $testSuite = new static;
         $block($testSuite);
 
-        $testSuite->execute();
     }
 
     /**
@@ -215,10 +214,11 @@ class TestSuite
     /**
      * Execute groups.
      */
-    public static function execute()
+    public static function run()
     {
         foreach (static::$groups as $group) {
             $group->execute();
+            static::$errorCount += $group->getErrorCount();
         }
 
         echo PHP_EOL;
@@ -228,5 +228,7 @@ class TestSuite
         }
 
         echo PHP_EOL;
+
+        exit(static::$errorCount ? 1 : 0);
     }
 }
