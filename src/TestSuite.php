@@ -32,6 +32,13 @@ use Avalon\Database\Migrator;
 class TestSuite
 {
     /**
+     * Instantiated TestSuite object.
+     *
+     * @var TestSuite
+     */
+    protected static $testSuite;
+
+    /**
      * @var AppKernel
      */
     protected static $app;
@@ -195,9 +202,13 @@ class TestSuite
      */
     public static function tests(callable $block)
     {
-        $testSuite = new static;
-        $block($testSuite);
+        if (!static::$testSuite) {
+            static::$testSuite = new static;
+        }
 
+        $block(static::$testSuite);
+
+        return static::$testSuite;
     }
 
     /**
