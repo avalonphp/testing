@@ -211,7 +211,13 @@ class TestSuite
     public static function execute()
     {
         foreach (static::$groups as $group) {
-            $group->execute()->display();
+            $group->execute();
+        }
+
+        echo PHP_EOL;
+
+        foreach (static::$groups as $group) {
+            $group->display();
         }
 
         echo PHP_EOL;
