@@ -23,6 +23,8 @@ use ReflectionObject;
 use Avalon\AppKernel;
 use Avalon\Database\ConnectionManager;
 use Avalon\Database\Migrator;
+use Avalon\Testing\Http\MockRequest;
+use Avalon\Http\Request;
 
 /**
  * Test Suite.
@@ -169,6 +171,10 @@ class TestSuite
 
         // Seed
         $this->seeder->seed();
+
+        // Shittyness
+        new MockRequest;
+        new Request;
 
         // Set app
         $appClass = $this->appClass;
