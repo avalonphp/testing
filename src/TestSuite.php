@@ -150,7 +150,7 @@ class TestSuite
 
         // Migrate
         $this->migrator = new Migrator;
-        $this->migrator->loadMigrations("{$this->appPath}/Migrations");
+        $this->migrator->loadMigrations("{$this->appPath}/Database/Migrations");
         $this->migrator->migrate();
 
         // Seed
