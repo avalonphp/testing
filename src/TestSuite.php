@@ -72,6 +72,13 @@ class TestSuite
     protected $seeder;
 
     /**
+     * Error count.
+     *
+     * @var integer
+     */
+    protected static $errorCount = 0;
+
+    /**
      * Configure the test suite.
      *
      * @param callable $block

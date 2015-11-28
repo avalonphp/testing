@@ -44,6 +44,11 @@ class TestGroup
     protected $messages = [];
 
     /**
+     * @var integer
+     */
+    protected $errorCount = 0;
+
+    /**
      * @param string   $name Group name.
      * @param callable $block
      */
@@ -78,6 +83,7 @@ class TestGroup
             if (!$test->execute()) {
                 echo 'F';
                 $this->messages[] = $test->output();
+                $this->errorCount++;
             } else {
                 echo '.';
             }
@@ -101,5 +107,13 @@ class TestGroup
         foreach ($this->messages as $message) {
             echo " - {$message}" . PHP_EOL;
         }
+    }
+
+    /**
+     * @return integer
+     */
+    public function getErrorCount()
+    {
+        return $this->errorCount;
     }
 }
