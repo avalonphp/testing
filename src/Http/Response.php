@@ -19,7 +19,6 @@
 
 namespace Avalon\Testing\Http;
 
-use Avalon\Http\Request;
 use Avalon\Routing\Router;
 use Avalon\Http\RedirectResponse;
 
@@ -59,7 +58,7 @@ class Response
      */
     public function shouldRedirectTo($routeName)
     {
-        $url = Request::basePath(Router::generateUrl($routeName, false));
+        $url = Router::generateUrl($routeName, false);
         return ($this->response instanceof RedirectResponse && $this->response->url == $url);
     }
 
