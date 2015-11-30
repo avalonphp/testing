@@ -172,9 +172,8 @@ class TestSuite
         // Seed
         $this->seeder->seed();
 
-        // Shittyness
+        // Setup mock request
         new MockRequest;
-        new Request;
 
         // Set app
         $appClass = $this->appClass;
