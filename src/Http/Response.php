@@ -37,6 +37,11 @@ class Response
         $this->response = $response;
     }
 
+    public function getResponse()
+    {
+        return $this->response;
+    }
+
     /**
      * Check if the response body contains the specified string.
      *
@@ -47,19 +52,6 @@ class Response
     public function contains($contains)
     {
         return strpos($this->response->body, $contains) !== false;
-    }
-
-    /**
-     * Check if the response redirection URL matches the URL of the specified route.
-     *
-     * @var string
-     *
-     * @return boolean
-     */
-    public function shouldRedirectTo($routeName)
-    {
-        $url = Router::generateUrl($routeName, false);
-        return ($this->response instanceof RedirectResponse && $this->response->url == $url);
     }
 
     /**

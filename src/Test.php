@@ -146,6 +146,29 @@ class Test
     }
 
     /**
+     * Check if the response redirection URL matches the specified URL.
+     *
+     * @param Response $response
+     * @param string   $intendedUrl
+     *
+     * @return boolean
+     */
+    public function shouldRedirectTo($response, $intendedUrl)
+    {
+        $response = $response->getResponse();
+
+        if (!($response instanceof RedirectResponse)) {
+            $this->errors[] = sprintf("expected response to be a redirect");
+        } elseif ($response->url !== $intendedUrl) {
+            $this->errors[] = sprintf(
+                "expected response to redirect to [%s] but was [%s]",
+                $intendedUrl,
+                $response->url
+            );
+        }
+    }
+
+    /**
      * Visit the route.
      *
      * @return Response
