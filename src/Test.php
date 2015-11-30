@@ -175,10 +175,11 @@ class Test
      */
     public function visit($routeName, array $requestInfo = [])
     {
-        $requestInfo = $requestInfo + ['routeTokens' => false];
+        $requestInfo = $requestInfo + ['routeTokens' => []];
 
         $route = Router::generateUrl($routeName, $requestInfo['routeTokens']);
         $request = new MockRequest($route, $requestInfo);
+
         return new Response(TestSuite::app()->run($request));
     }
 
