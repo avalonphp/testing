@@ -37,6 +37,7 @@ class MockRequest extends Request
         $_SERVER['HTTP_HOST']      = "localhost";
         $_SERVER['REQUEST_METHOD'] = $requestInfo['method'];
         $_SERVER['REQUEST_URI']    = $path;
+        $_SERVER['QUERY_STRING']   = '';
 
         $_POST = $requestInfo['post'];
         $_GET  = $requestInfo['get'];
