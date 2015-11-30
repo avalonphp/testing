@@ -19,6 +19,7 @@
 
 namespace Avalon\Testing;
 
+use Avalon\Http\RedirectResponse;
 use Avalon\Routing\Router;
 use Avalon\Testing\TestCase;
 use Avalon\Testing\Http\MockRequest;
@@ -143,6 +144,11 @@ class Test
         if (strpos($haystack, $search) === false) {
             $this->errors[] = sprintf("expected value to be contain [%s]", $this->varToString($search));
         }
+    }
+
+    public function generateUrl($route, $tokens = [])
+    {
+        return Router::generateUrl($route, $tokens);
     }
 
     /**
