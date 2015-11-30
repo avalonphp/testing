@@ -43,6 +43,8 @@ class MockRequest extends Request
         $_GET  = $requestInfo['get'];
         $_REQUEST = array_merge($_GET, $_POST);
 
+        new Request;
+
         parent::__construct();
     }
 }
