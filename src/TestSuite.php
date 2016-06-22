@@ -245,6 +245,8 @@ class TestSuite
 
         echo PHP_EOL;
 
+        echo 'Completed with '. static::$errorCount .' errors' . PHP_EOL;
+
         exit(static::$errorCount ? 1 : 0);
     }
 }
