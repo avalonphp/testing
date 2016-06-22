@@ -186,7 +186,7 @@ class Test
         $route = Router::generateUrl($routeName, $requestInfo['routeTokens']);
         $request = new MockRequest($route, $requestInfo);
 
-        return new Response(TestSuite::app()->run($request));
+        return new Response(TestSuite::app()->process($request));
     }
 
     /**
