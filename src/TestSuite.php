@@ -152,11 +152,11 @@ class TestSuite
 
         // Get configuration
         if ($this->appConfig === null) {
-            $this->appConfig = require "{$this->appPath}/config/config.php";
+            $this->appConfig = require "{$this->appPath}/../config/config.php";
         }
 
         // Connect to the database
-        $this->db = ConnectionManager::create($this->appConfig['database']['test']);
+        $this->db = ConnectionManager::create($this->appConfig['db']['test']);
 
         // Drop tables
         $this->sm = ConnectionManager::getConnection()->getSchemaManager();
