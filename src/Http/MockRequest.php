@@ -31,7 +31,8 @@ class MockRequest extends Request
         $requestInfo = $requestInfo + [
             'method' => "GET",
             'post'   => [],
-            'get'    => []
+            'get'    => [],
+            'cookie' => []
         ];
 
         $_SERVER['HTTP_HOST']      = "localhost";
@@ -42,6 +43,7 @@ class MockRequest extends Request
         $_POST = $requestInfo['post'];
         $_GET  = $requestInfo['get'];
         $_REQUEST = array_merge($_GET, $_POST);
+        $_COOKIE = $requestInfo['cookie'];
 
         new Request;
 
