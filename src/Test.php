@@ -142,7 +142,22 @@ class Test
         }
 
         if (strpos($haystack, $search) === false) {
-            $this->errors[] = sprintf("expected value to be contain [%s]", $this->varToString($search));
+            $this->errors[] = sprintf("expected value to contain [%s]", $this->varToString($search));
+        }
+    }
+
+    /**
+     * @param mixed  $haystack
+     * @param string $search
+     */
+    public function shouldNotContain($haystack, $search)
+    {
+        if (is_object($haystack)) {
+            $haystack = $haystack->toString();
+        }
+
+        if (strpos($haystack, $search) !== false) {
+            $this->errors[] = sprintf("expected value to not contain [%s]", $this->varToString($search));
         }
     }
 
