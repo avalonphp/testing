@@ -45,8 +45,7 @@ class MockRequest extends Request
         $_REQUEST = array_merge($_GET, $_POST);
         $_COOKIE = $requestInfo['cookie'];
 
-        new Request;
-
-        parent::__construct();
+        Request::reset();
+        Request::init();
     }
 }
