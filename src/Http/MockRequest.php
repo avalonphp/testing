@@ -1,7 +1,7 @@
 <?php
 /*!
  * Avalon
- * Copyright 2011-2015 Jack P.
+ * Copyright 2011-2016 Jack P.
  * https://github.com/avalonphp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@ use Avalon\Http\Request;
 /**
  * Mock request for testing purposes.
  */
-class MockRequest extends Request
+class MockRequest// extends Request
 {
     public function __construct($path = '/', array $requestInfo = [])
     {
