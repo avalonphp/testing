@@ -62,7 +62,15 @@ class Test
     public function execute()
     {
         $block = $this->block;
-        $block($this);
+
+        if (TestSuite::isCodeCoverageEnabled()) {
+            TestSuite::getCodeCoverage()->start($this->name);
+            $block($this);
+            TestSuite::getCodeCoverage()->stop();
+        } else {
+            $block($this);
+        }
+
         return count($this->errors) ? false : true;
     }
 

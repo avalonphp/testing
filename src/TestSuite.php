@@ -25,6 +25,8 @@ use Avalon\Database\ConnectionManager;
 use Avalon\Database\Migrator;
 use Avalon\Testing\Http\MockRequest;
 use Avalon\Http\Request;
+use SebastianBergmann\CodeCoverage\CodeCoverage;
+use SebastianBergmann\CodeCoverage\Report\Html\Facade as CodeCoverageHtmlFacade;
 
 /**
  * Test Suite.
@@ -81,11 +83,60 @@ class TestSuite
     protected $seeder;
 
     /**
+     * Test count.
+     *
+     * @var integer
+     */
+    protected static $testCount = 0;
+
+    /**
      * Error count.
      *
      * @var integer
      */
     protected static $errorCount = 0;
+
+    /**
+     * Whether or not code coverage is enabled.
+     *
+     * @var boolean
+     */
+    protected static $enableCodeCoverage = false;
+
+    /**
+     * The directory to output the code coverage report.
+     *
+     * @var string
+     */
+    protected static $phpCodeCoverageOutputDirectory;
+
+    /**
+     * The PHP CodeCoverage instance.
+     *
+     * @var CodeCoverage
+     */
+    protected static $phpCodeCoverageInstance;
+
+    protected function __construct()
+    {
+        global $argv;
+
+        $codeCoverageKey = array_search('--code-coverage', $argv);
+
+        if ($codeCoverageKey) {
+            $codeCoverageDirectoryKey = $codeCoverageKey + 1;
+            $codeCoverageOutputDirectory = isset($argv[$codeCoverageDirectoryKey])
+                                           ? $argv[$codeCoverageDirectoryKey]
+                                           : 'tmp/code-coverage-report';
+
+            if (file_exists($codeCoverageOutputDirectory) || is_dir($codeCoverageOutputDirectory)) {
+                die('Code coverage output directory already exists' . PHP_EOL);
+            }
+
+            static::$phpCodeCoverageOutputDirectory = $codeCoverageOutputDirectory;
+            static::enableCodeCoverage();
+        }
+    }
 
     /**
      * Configure the test suite.
@@ -234,6 +285,7 @@ class TestSuite
     {
         foreach (static::$groups as $group) {
             $group->execute();
+            static::$testCount += $group->getTestCount();
             static::$errorCount += $group->getErrorCount();
         }
 
@@ -245,8 +297,44 @@ class TestSuite
 
         echo PHP_EOL;
 
-        echo 'Completed with '. static::$errorCount .' errors' . PHP_EOL;
+        printf('Completed %d tests with %d errors' . PHP_EOL, static::$testCount, static::$errorCount);
+
+        if (static::$enableCodeCoverage) {
+            echo PHP_EOL . 'Generating code coverage report..' . PHP_EOL;
+            $writer = new CodeCoverageHtmlFacade;
+            $writer->process(static::$phpCodeCoverageInstance, static::$phpCodeCoverageOutputDirectory);
+        }
 
         exit(static::$errorCount ? 1 : 0);
+    }
+
+    /**
+     * Enable code coverage.
+     */
+    public static function enableCodeCoverage()
+    {
+        if (class_exists('SebastianBergmann\CodeCoverage\CodeCoverage')) {
+            static::$phpCodeCoverageInstance = new CodeCoverage;
+            static::$enableCodeCoverage = true;
+        } else {
+            echo PHP_EOL . 'Unable to enable code coverage, PHPCodeCoverage not found.' . PHP_EOL;
+            exit;
+        }
+    }
+
+    /**
+     * @return boolean
+     */
+    public static function isCodeCoverageEnabled()
+    {
+        return static::$enableCodeCoverage;
+    }
+
+    /**
+     * @return CodeCoverage
+     */
+    public static function getCodeCoverage()
+    {
+        return static::$phpCodeCoverageInstance;
     }
 }

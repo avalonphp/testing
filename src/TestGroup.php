@@ -46,6 +46,11 @@ class TestGroup
     /**
      * @var integer
      */
+    protected $testCount = 0;
+
+    /**
+     * @var integer
+     */
     protected $errorCount = 0;
 
     /**
@@ -67,6 +72,7 @@ class TestGroup
     public function test($name, $block)
     {
         $this->tests[] = new Test($name, $block);
+        $this->testCount++;
     }
 
     /**
@@ -107,6 +113,14 @@ class TestGroup
         foreach ($this->messages as $message) {
             echo " - {$message}" . PHP_EOL;
         }
+    }
+
+    /**
+     * @return integer
+     */
+    public function getTestCount()
+    {
+        return $this->testCount;
     }
 
     /**
