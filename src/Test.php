@@ -351,19 +351,13 @@ class Test
      * @param string   $expected
      * @param Response $response
      */
-    public function shouldRedirectTo($expected, $response)
+    public function assertRedirectTo($expected, $response)
     {
         $this->incrementAssertionCount();
 
         if (!($response instanceof RedirectResponse)) {
             $this->addError('expected response to be a redirect');
-        } elseif ($response->url !== $intendedUrl) {
-            $this->errors[] = sprintf(
-                "expected response to redirect to [%s] but was [%s]",
-                $intendedUrl,
-                $response->url
-            );
-
+        } elseif ($response->url !== $expected) {
             $this->addError(
                 'expected response to redirect to [%] but was [%s]',
                 $this->varToString($expected),
