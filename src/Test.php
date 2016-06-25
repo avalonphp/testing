@@ -359,7 +359,7 @@ class Test
             $this->addError('expected response to be a redirect');
         } elseif ($response->url !== $expected) {
             $this->addError(
-                'expected response to redirect to [%] but was [%s]',
+                'expected response to redirect to [%s] but was [%s]',
                 $this->varToString($expected),
                 $this->varToString($response->url)
             );
