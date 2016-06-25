@@ -1,7 +1,7 @@
 <?php
 /*!
  * Avalon
- * Copyright 2011-2015 Jack P.
+ * Copyright 2011-2016 Jack P.
  * https://github.com/avalonphp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,38 +19,50 @@
 
 namespace Avalon\Testing;
 
-use ReflectionObject;
+use ReflectionClass;
 use Avalon\AppKernel;
+use Avalon\Http\Request;
+use Avalon\Testing\Http\MockRequest;
 use Avalon\Database\ConnectionManager;
 use Avalon\Database\Migrator;
-use Avalon\Testing\Http\MockRequest;
-use Avalon\Http\Request;
 use SebastianBergmann\CodeCoverage\CodeCoverage;
 use SebastianBergmann\CodeCoverage\Report\Html\Facade as CodeCoverageHtmlFacade;
 
 /**
  * Test Suite.
  *
- * @author Jack P.
+ * @package Avalon\Testing
+ * @author  Jack P.
+ * @since   1.0.0
  */
 class TestSuite
 {
     /**
-     * Instantiated TestSuite object.
+     * Whether or not the test suite has been setup.
      *
-     * @var TestSuite
+     * @var boolean
      */
-    protected static $testSuite;
-
-    /**
-     * @var AppKernel
-     */
-    protected static $app;
+    protected $isSetup = false;
 
     /**
      * @var Group[]
      */
-    protected static $groups = [];
+    protected $groups = [];
+
+    /**
+     * @var integer
+     */
+    protected $testCount = 0;
+
+    /**
+     * @var integer
+     */
+    protected $assertionCount = 0;
+
+    /**
+     * @var integer
+     */
+    protected $failureCount = 0;
 
     /**
      * @var string
@@ -58,9 +70,14 @@ class TestSuite
     protected $appClass;
 
     /**
-     * @var string
+     * @var AppKernel
      */
-    protected $appPath;
+    protected $app;
+
+    /**
+     * @var object
+     */
+    protected $appSeederClass;
 
     /**
      * @var array
@@ -68,128 +85,158 @@ class TestSuite
     protected $appConfig;
 
     /**
-     * @var object
-     */
-    protected $db;
-
-    /**
-     * @var Migrator
-     */
-    protected $migrator;
-
-    /**
+     * Database seeder.
+     *
      * @var object
      */
     protected $seeder;
 
     /**
-     * Test count.
-     *
-     * @var integer
+     * @var CodeCoverage
      */
-    protected static $testCount = 0;
+    protected $codeCoverage;
 
     /**
-     * Error count.
-     *
-     * @var integer
-     */
-    protected static $errorCount = 0;
-
-    /**
-     * Whether or not code coverage is enabled.
+     * Whether or not if code coverage is enabled.
      *
      * @var boolean
      */
-    protected static $enableCodeCoverage = false;
+    protected $codeCoverageEnabled = false;
 
     /**
-     * The directory to output the code coverage report.
+     * Directory to output code coverage report.
      *
      * @var string
      */
-    protected static $phpCodeCoverageOutputDirectory;
+    protected $coverageOutputDirectory;
 
     /**
-     * The PHP CodeCoverage instance.
-     *
-     * @var CodeCoverage
+     * @param string $appClass
+     * @param string $seederClass
+     * @param arrray $config
      */
-    protected static $phpCodeCoverageInstance;
-
-    protected function __construct()
+    public function __construct($appClass, $seederClass, $config)
     {
         global $argv;
+
+        $this->appClass = $appClass;
+        $this->appSeederClass = $seederClass;
+        $this->appConfig = $config;
 
         $codeCoverageKey = array_search('--code-coverage', $argv);
 
         if ($codeCoverageKey) {
-            $codeCoverageDirectoryKey = $codeCoverageKey + 1;
-            $codeCoverageOutputDirectory = isset($argv[$codeCoverageDirectoryKey])
-                                           ? $argv[$codeCoverageDirectoryKey]
-                                           : 'tmp/code-coverage-report';
+            $coverageDirectoryKey = $codeCoverageKey + 1;
+            $coverageOutputDirectory = isset($argv[$coverageDirectoryKey])
+                                       ? $argv[$coverageDirectoryKey]
+                                       : 'tmp/code-coverage-report';
 
-            if (file_exists($codeCoverageOutputDirectory) || is_dir($codeCoverageOutputDirectory)) {
-                die('Code coverage output directory already exists' . PHP_EOL);
-            }
+            // if (file_exists($coverageOutputDirectory) || is_dir($coverageOutputDirectory)) {
+            //     echo 'Code coverage output directory already exists', PHP_EOL;
+            //     exit(1);
+            // }
 
-            static::$phpCodeCoverageOutputDirectory = $codeCoverageOutputDirectory;
-            static::enableCodeCoverage();
+            $this->codeCoverageEnabled = true;
+            $this->coverageOutputDirectory = $coverageOutputDirectory;
+            $this->codeCoverage = new CodeCoverage;
         }
     }
 
     /**
-     * Configure the test suite.
-     *
-     * @param callable $block
+     * @return AppKernel
      */
-    public static function configure(callable $block)
+    public function getApp()
     {
-        $testing = new static;
-
-        $block($testing);
-
-        $testing->setup();
+        return $this->app;
     }
 
     /**
-     * Set application class name.
-     *
-     * @param string
+     * Run test suite.
      */
-    public function setAppClass($appClass)
+    public function run()
     {
-        $this->appClass = $appClass;
+        if (!$this->isSetup) {
+            $this->setup();
+        }
+
+        echo 'Avalon Test Suite by Jack P.', PHP_EOL, PHP_EOL;
+
+        foreach ($this->groups as $group) {
+            $group->run();
+
+            $this->testCount = $this->testCount + $group->getTestCount();
+            $this->assertionCount = $this->assertionCount + $group->getAssertionCount();
+            $this->failureCount = $this->failureCount + $group->getFailureCount();
+        }
+
+        echo PHP_EOL;
+
+        if ($this->failureCount) {
+            echo PHP_EOL;
+
+            foreach ($this->groups as $group) {
+                if ($group->getFailureCount() > 0) {
+                    echo $group->getName() . PHP_EOL;
+
+                    foreach ($group->getTests() as $test) {
+                        if ($test->getFailureCount()) {
+                            echo '  - ', $test->getName(), PHP_EOL;
+
+                            foreach ($test->getErrorMessages() as $message) {
+                                echo '      - ', $message, PHP_EOL;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        printf(
+            PHP_EOL . 'Ran %d tests with %d assertions and %d failures' . PHP_EOL,
+            $this->testCount,
+            $this->assertionCount,
+            $this->failureCount
+        );
+
+        if ($this->codeCoverageEnabled) {
+            echo PHP_EOL . 'Generating code coverage report..' . PHP_EOL;
+            $writer = new CodeCoverageHtmlFacade;
+            $writer->process($this->codeCoverage, $this->coverageOutputDirectory);
+        }
+
+        exit($this->failureCount > 0 ? 1 : 0);
     }
 
     /**
-     * Set application path.
-     *
-     * @param string
+     * @return boolean
      */
-    public function setAppPath($path)
+    public function codeCoverageEnabled()
     {
-        $this->appPath = $path;
+        return $this->codeCoverageEnabled;
     }
 
     /**
-     * Set application configuration array.
-     *
-     * @param array
+     * @return CodeCoverage
      */
-    public function setAppConfig(array $config)
+    public function getCodeCoverage()
     {
-        $this->appConfig = $config;
+        return $this->codeCoverage;
     }
 
     /**
-     * Set database seeder object.
+     * Create test group.
      *
-     * @param object
+     * @param string   $name
+     * @param callable $func
+     *
+     * @return TestGroup
      */
-    public function setSeeder($seeder)
+    public function createGroup($name, callable $func)
     {
-        $this->seeder = $seeder;
+        $group = new TestGroup($name, $func);
+        $group->setTestSuite($this);
+        $this->groups[] = $group;
+        return $group;
     }
 
     /**
@@ -197,14 +244,16 @@ class TestSuite
      */
     public function setup()
     {
+        if ($this->isSetup) {
+            return;
+        }
+
+        $appReflection = new ReflectionClass($this->appClass);
+        $this->appPath = dirname($appReflection->getFileName());
+
         // Set environment and HTTP host
         $_ENV['environment'] = 'test';
         $_SERVER['HTTP_HOST'] = 'localhost';
-
-        // Get configuration
-        if ($this->appConfig === null) {
-            $this->appConfig = require "{$this->appPath}/../config/config.php";
-        }
 
         // Connect to the database
         $this->db = ConnectionManager::create($this->appConfig['db']['test']);
@@ -221,120 +270,22 @@ class TestSuite
         $this->migrator->migrate();
 
         // Seed
-        $this->seeder->seed();
-
-        // Setup mock request
-        new MockRequest;
+        $seederClass = $this->appSeederClass;
+        $seeder = new $seederClass;
+        $seeder->seed();
 
         // Set app
         $appClass = $this->appClass;
-        static::setApp(new $appClass);
-    }
 
-    /**
-     * Set application.
-     *
-     * @param AppKernel $app
-     */
-    public static function setApp(AppKernel $app)
-    {
-        static::$app = $app;
-    }
-
-    /**
-     * Get the app.
-     *
-     * @return AppKernel
-     */
-    public static function app()
-    {
-        return static::$app;
-    }
-
-    /**
-     * Create tests.
-     *
-     * @param callable $block
-     */
-    public static function tests(callable $block)
-    {
-        if (!static::$testSuite) {
-            static::$testSuite = new static;
-        }
-
-        $block(static::$testSuite);
-
-        return static::$testSuite;
-    }
-
-    /**
-     * New test group.
-     *
-     * @param string   $name
-     * @param callable $block
-     */
-    public static function group($name, callable $block)
-    {
-        static::$groups[] = new TestGroup($name, $block);
-    }
-
-    /**
-     * Execute groups.
-     */
-    public static function run()
-    {
-        foreach (static::$groups as $group) {
-            $group->execute();
-            static::$testCount += $group->getTestCount();
-            static::$errorCount += $group->getErrorCount();
-        }
-
-        echo PHP_EOL;
-
-        foreach (static::$groups as $group) {
-            $group->display();
-        }
-
-        echo PHP_EOL;
-
-        printf('Completed %d tests with %d errors' . PHP_EOL, static::$testCount, static::$errorCount);
-
-        if (static::$enableCodeCoverage) {
-            echo PHP_EOL . 'Generating code coverage report..' . PHP_EOL;
-            $writer = new CodeCoverageHtmlFacade;
-            $writer->process(static::$phpCodeCoverageInstance, static::$phpCodeCoverageOutputDirectory);
-        }
-
-        exit(static::$errorCount ? 1 : 0);
-    }
-
-    /**
-     * Enable code coverage.
-     */
-    public static function enableCodeCoverage()
-    {
-        if (class_exists('SebastianBergmann\CodeCoverage\CodeCoverage')) {
-            static::$phpCodeCoverageInstance = new CodeCoverage;
-            static::$enableCodeCoverage = true;
+        if ($this->codeCoverageEnabled) {
+            $this->codeCoverage->start('TestSuite setup');
+            $this->app = new $appClass;
+            $this->codeCoverage->stop();
         } else {
-            echo PHP_EOL . 'Unable to enable code coverage, PHPCodeCoverage not found.' . PHP_EOL;
-            exit;
+            $this->app = new $appClass;
         }
-    }
 
-    /**
-     * @return boolean
-     */
-    public static function isCodeCoverageEnabled()
-    {
-        return static::$enableCodeCoverage;
-    }
-
-    /**
-     * @return CodeCoverage
-     */
-    public static function getCodeCoverage()
-    {
-        return static::$phpCodeCoverageInstance;
+        new MockRequest;
+        Request::init();
     }
 }
