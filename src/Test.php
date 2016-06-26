@@ -142,6 +142,8 @@ class Test
             return get_class($var);
         } elseif (is_array($var)) {
             return 'Array(' . json_encode($var) . ')';
+        } else {
+            return (string) $var;
         }
     }
 
@@ -282,22 +284,43 @@ class Test
     {
         $this->incrementAssertionCount();
 
+        $valueType = gettype($value);
         $searchFound = false;
 
-        if ((is_string($value))
-        || (is_object($value) && method_exists($value, '__toString'))) {
-            if (strpos((string) $value, $search) !== false) {
-                $searchFound = true;
-            }
-        } elseif (is_array($value)) {
-            if (in_array($search, $value)) {
-                $searchFound = true;
-            }
-        } else {
-            throw new Exception(sprintf(
-                'Test::assertContains() doesn\'t support the type of value passed [%s]',
-                $this->varToString($value)
-            ));
+        switch ($valueType) {
+            case 'NULL':
+                return $this->addError('unable to search NULL for [%s]', $this->varToString($search));
+                break;
+
+            case 'string':
+                if (strpos($value, $search) !== false) {
+                    $searchFound = true;
+                }
+                break;
+
+            case 'object':
+                if (method_exists($value, '__toString') && strpos((string) $value, $search) !== false) {
+                    $searchFound = true;
+                } else {
+                    throw new Exception(sprintf(
+                        'Unable to check if object [%s] contains value [%s]',
+                        get_class($value),
+                        $this->varToString($search)
+                    ));
+                }
+                break;
+
+            case 'array':
+                if (in_array($search, $value)) {
+                    $searchFound = true;
+                }
+                break;
+
+            default:
+                throw new Exception(sprintf(
+                    'Test::assertContains() doesn\'t support the type of value passed [%s]',
+                    gettype($value)
+                ));
         }
 
         if (!$searchFound && $shouldContain) {
