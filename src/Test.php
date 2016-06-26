@@ -139,6 +139,8 @@ class Test
             return $var ? 'true' : 'false';
         } elseif (is_object($var)) {
             return get_class($var);
+        } elseif (is_array($var)) {
+            return 'Array(' . json_encode($var) . ')';
         }
     }
 
