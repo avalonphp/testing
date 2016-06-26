@@ -19,6 +19,7 @@
 
 namespace Avalon\Testing;
 
+use Exception;
 use Avalon\Http\RedirectResponse;
 use Avalon\Routing\Router;
 use Avalon\Testing\Http\MockRequest;
@@ -277,18 +278,40 @@ class Test
      * @param mixed $search
      * @param mixed $value
      */
-    public function assertContains($search, $value)
+    public function assertContains($search, $value, $shouldContain = true)
     {
         $this->incrementAssertionCount();
 
-        if (is_string($value)) {
-            if (strpos($value, $search) === false) {
-                $this->addError(
-                    'expected [%s] to contain [%s]',
-                    $this->varToString($value),
-                    $this->varToString($search)
-                );
+        $searchFound = false;
+
+        if ((is_string($value))
+        || (is_object($value) && method_exists($value, '__toString'))) {
+            if (strpos((string) $value, $search) !== false) {
+                $searchFound = true;
             }
+        } elseif (is_array($value)) {
+            if (in_array($search, $value)) {
+                $searchFound = true;
+            }
+        } else {
+            throw new Exception(sprintf(
+                'Test::assertContains() doesn\'t support the type of value passed [%s]',
+                $this->varToString($value)
+            ));
+        }
+
+        if (!$searchFound && $shouldContain) {
+            $this->addError(
+                'expected [%s] to contain [%s]',
+                $this->varToString($value),
+                $this->varToString($search)
+            );
+        } elseif ($searchFound && !$shouldContain) {
+            $this->addError(
+                'expected [%s] to not contain [%s]',
+                $this->varToString($value),
+                $this->varToString($search)
+            );
         }
     }
 
@@ -298,17 +321,7 @@ class Test
      */
     public function assertNotContains($search, $value)
     {
-        $this->incrementAssertionCount();
-
-        if (is_string($value)) {
-            if (strpos($value, $search) !== false) {
-                $this->addError(
-                    'expected [%s] to not contain [%s]',
-                    $this->varToString($value),
-                    $this->varToString($search)
-                );
-            }
-        }
+        return $this->assertContains($search, $value, false);
     }
 
     /**
