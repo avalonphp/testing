@@ -119,6 +119,11 @@ class TestSuite
     {
         global $argv;
 
+        // Set test environment
+        $_ENV['environment'] = 'test';
+        putenv('environment=test');
+        $config['environment'] = 'test';
+
         $this->appClass = $appClass;
         $this->appSeederClass = $seederClass;
         $this->appConfig = $config;
