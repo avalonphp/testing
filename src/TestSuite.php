@@ -123,6 +123,7 @@ class TestSuite
         $_ENV['environment'] = 'test';
         putenv('environment=test');
         $config['environment'] = 'test';
+        $_SERVER['HTTP_HOST'] = 'test.dev';
 
         $this->appClass = $appClass;
         $this->appSeederClass = $seederClass;
